@@ -101,12 +101,12 @@ def get_all_days(workbook):
                 date_cells_hash[data] = d
     return days, date_cells_hash
 
-def set_value(workbook, coord, value):
-    if value > 0:
-        set_cell_value_and_color(workbook, coord, value, YELLOW_COLOR)
+def set_value(workbook, coord, value, color):
+    if (isinstance(value, int) and value > 0) or isinstance(value, str):
+        set_cell_value_and_color(workbook, coord, value, color)
         letter, number = split_alpha_numeric(coord)
         new_coord = f"{letter}{row_maps[int(number)]}"
-        set_cell_value_and_color(workbook, new_coord, value, YELLOW_COLOR)
+        set_cell_value_and_color(workbook, new_coord, value, color)
 
 def distribute_hours(workbook, total_hours, max_per_day, days):
     # Dizionario per memorizzare le ore assegnate a ciascun giorno
@@ -132,7 +132,7 @@ def distribute_hours(workbook, total_hours, max_per_day, days):
 
     # Imposta il valore per ogni giorno
     for day, hours in hours_per_day.items():
-        set_value(workbook, day, hours)
+        set_value(workbook, day, hours, YELLOW_COLOR)
 
 WHITE_COLOR = 0
 YELLOW_COLOR = 'FFFFFF00'
@@ -164,7 +164,7 @@ def filter_by_absences(workbook, days, date_cells_hash):
         splitted = abs.split("/")
         label = splitted[-1]
         hash_date = str(int(splitted[0].split("-")[-1]))+"/"+str(int(splitted[0].split("-")[-2]))
-        set_cell_value(workbook, date_cells_hash[hash_date], label)
+        set_value(workbook, date_cells_hash[hash_date], label, YELLOW_COLOR)
         # remove from the list that hash
         days.remove(date_cells_hash[hash_date])
         date_cells_hash.pop(hash_date)
@@ -262,5 +262,6 @@ if __name__ == "__main__":
         except SaveFileException:
             st.text("Errore nell'upload e salvataggio del file excell.")
         except Exception as e:
+            print(e)
             st.error(e)
     
