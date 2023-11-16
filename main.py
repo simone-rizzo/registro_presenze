@@ -230,7 +230,7 @@ if __name__ == "__main__":
     st.subheader("Inserisci Date assenze:")
     # Seleziona la data e la label
     selected_date = st.date_input("Seleziona una data")
-    selected_label = st.selectbox("Seleziona una label", ["F", "P", "M", "A", "CG"])
+    selected_label = st.selectbox("Seleziona una label", ["F", "P", "M", "A", "CG", "NO"])
 
     # Pulsante per aggiungere la data
     st.button("Aggiungi Data", on_click=add_date)
