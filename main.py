@@ -91,7 +91,7 @@ def get_all_days(workbook):
     for i, month_row in enumerate(list(row_maps.keys())):
         month_cells = get_cells_between(f"{columns[0]}{month_row}",f"{columns[1]}{month_row}")
         for d in month_cells:
-            if get_cell_color(workbook, d) == WHITE_COLOR:
+            if not get_cell_color(workbook, d) == 'FFFF0000' or get_cell_color(workbook, d) == 1 or  get_cell_color(workbook, d) == 3:
                 mese = i+1
                 lett, num = split_alpha_numeric(d)
                 giorno = get_cell_value(workbook, f"{lett}{int(num)-1}")
@@ -103,6 +103,8 @@ def get_all_days(workbook):
 
 def set_value(workbook, coord, value, color):
     if (isinstance(value, int) and value > 0) or isinstance(value, str):
+        if value=="Formazione":
+            value = ""
         set_cell_value_and_color(workbook, coord, value, color)
         letter, number = split_alpha_numeric(coord)
         new_coord = f"{letter}{row_maps[int(number)]}"
@@ -132,12 +134,25 @@ def distribute_hours(workbook, total_hours, max_per_day, days):
 
     # Imposta il valore per ogni giorno
     for day, hours in hours_per_day.items():
-        set_value(workbook, day, hours, YELLOW_COLOR)
+        if get_cell_color(workbook, day) == label_color["Formazione"]:
+            set_value(workbook, day, hours, label_color["Formazione"])
+        else:
+            set_value(workbook, day, hours, YELLOW_COLOR)
 
 WHITE_COLOR = 0
 YELLOW_COLOR = 'FFFFFF00'
 
 row_maps = { 9:71, 13:85, 17:99, 21:113, 25:127, 29:141, 33:155, 37:169, 41:183, 45:197, 49:211, 53:225 }
+label_color = {
+    "F": "FF000000",       # Black
+    "P": "FF000005",       # Custom color based on your integers
+    "M": "FF000006",       # Custom color based on your integers
+    "A": "FF000008",       # Custom color based on your integers
+    "CG": "FF92D050",      # Hexadecimal color
+    "NO": "FF00B0F0",      # Hexadecimal color
+    "Formazione": "00FF66FF"  # Hexadecimal color
+}
+
 columns = ["C", "AG"]
 
 def save_uploaded_file(uploaded_file):
@@ -155,7 +170,7 @@ def filter_by_start_end_date(days, date_cells_hash, start_date, end_date):
         lista_chiavi = list(date_cells_hash.keys())
         start_index = lista_chiavi.index(start)
         end_index = lista_chiavi.index(end)
-        return days[start_index:end_index]
+        return days[start_index:end_index+1]
     except Exception as e:
         raise StartEndDateException() from e
 
@@ -164,10 +179,12 @@ def filter_by_absences(workbook, days, date_cells_hash):
         splitted = abs.split("/")
         label = splitted[-1]
         hash_date = str(int(splitted[0].split("-")[-1]))+"/"+str(int(splitted[0].split("-")[-2]))
-        set_value(workbook, date_cells_hash[hash_date], label, YELLOW_COLOR)
+        color = label_color[label]
+        set_value(workbook, date_cells_hash[hash_date], label, color)
         # remove from the list that hash
-        days.remove(date_cells_hash[hash_date])
-        date_cells_hash.pop(hash_date)
+        if not label=="Formazione": # rimuovi solo nel caso in cui non è formazione
+            days.remove(date_cells_hash[hash_date])
+            date_cells_hash.pop(hash_date)
     return days, date_cells_hash
         
 
@@ -230,7 +247,7 @@ if __name__ == "__main__":
     st.subheader("Inserisci Date assenze:")
     # Seleziona la data e la label
     selected_date = st.date_input("Seleziona una data")
-    selected_label = st.selectbox("Seleziona una label", ["F", "P", "M", "A", "CG", "NO"])
+    selected_label = st.selectbox("Seleziona una label", ["F", "P", "M", "A", "CG", "NO", "Formazione"])
 
     # Pulsante per aggiungere la data
     st.button("Aggiungi Data", on_click=add_date)
